@@ -94,9 +94,16 @@ for i in range(0, len(excelFiles)):
     # Open Excel file
     workBook = openpyxl.load_workbook(excelFiles[i])
     workSheet = workBook.active
+
+    # Create dictionary of column names
+    ColNames = {}
+    Current  = 0
+    for col in workSheet.iter_cols(1, workSheet.max_column):
+        ColNames[col[0].value] = col[0].column_letter
+        Current += 1
     
     # Get month of rows and add them to monthSet
-    for col in workSheet['D']:
+    for col in workSheet[ColNames['940 Date/Time Stamp']]: # CHANGE THIS TO THE COLUMN WITH 940 Date/Time Stamp
         if col.row > 1:
             monthSet.add(ExtractMonth(col.value))
 
@@ -106,17 +113,17 @@ for i in range(0, len(excelFiles)):
         tempList.append(Customer) # Customer
         for cell in row:
             if cell.row > 1:
-                if cell.column_letter == 'D':
+                if cell.column_letter == ColNames['940 Date/Time Stamp']: # CHANGE TO COLUMN WITH 940 Date/Time Stamp
                     tempList.append(cell.value) # Transaction Date
-                if cell.column_letter == 'E':
+                if cell.column_letter == ColNames['Order Number']: # CHANGE TO COLUMN WITH Order Number
                     tempList.append((str(cell.value))[:11]) # RefNumber, truncate to 11 characters
                     tempList.append((str(cell.value))[:11]) # PO Number, truncate to 11 characters
-                if cell.column_letter == 'M':
+                if cell.column_letter == ColNames['Delivery Date']: # CHANGE TO COLUMN WITH Delivery Date
                     tempList.insert(4, cell.value) # Ship Date
                     tempList.insert(5, cell.value) # Due Date
                     tempList.insert(6, Item) # Item
                     tempList.insert(7, Quantity) # Quantity
-                if cell.column_letter == 'L':
+                if cell.column_letter == ColNames['Mono_Font and Text']: # CHANGE TO COLUMN WITH Mono_Font and Text
                     tempList.insert(8, cell.value) # Description
                     tempList.insert(9, Price) # Price
         listofLists.append(tempList)
@@ -131,4 +138,6 @@ for month in monthSet:
 
 # Exit program
 sys.exit()
+
+
 
