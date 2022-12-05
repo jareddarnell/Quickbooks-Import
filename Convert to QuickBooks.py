@@ -3,6 +3,7 @@ import os
 import sys
 import fnmatch
 import datetime
+import calendar
 
 # Constants
 WorkSheetTitle = "Embroidery"
@@ -38,7 +39,7 @@ listofLists = []
 def CreateNewSheet(month):
     wb = openpyxl.Workbook()
     ws = wb.active
-    ws.title = WorkSheetTitle + str(month)
+    ws.title = WorkSheetTitle + ' - ' + calendar.month_name[month]
     # Add headers to the first row from the headerList
     for col, val in enumerate(headerList, start=1):
         ws.cell(row=1, column=col).value = val
@@ -71,13 +72,11 @@ def CreateNewSheet(month):
             
             count += 1
         
-    wb.save(WorkSheetTitle + " " + str(month) + ".xlsx")
-
+    wb.save(WorkSheetTitle + ' - ' + calendar.month_name[month] + ".xlsx")
 
 # Extracts the month number from a date string
 def ExtractMonth(date):
     return date.month
-
 
 # Get current directory
 currentDirectory = os.getcwd()
@@ -124,7 +123,7 @@ for i in range(0, len(excelFiles)):
                     tempList.insert(6, Item) # Item
                     tempList.insert(7, Quantity) # Quantity
                 if cell.column_letter == ColNames['Mono_Font and Text']: # CHANGE TO COLUMN WITH Mono_Font and Text
-                    tempList.insert(8, cell.value) # Description
+                    tempList.insert(8, os.path.splitext(excelFiles[i])[0]) # Name of excel file
                     tempList.insert(9, Price) # Price
         listofLists.append(tempList)
     
