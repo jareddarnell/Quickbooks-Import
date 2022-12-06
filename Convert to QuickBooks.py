@@ -29,17 +29,15 @@ headerList = ["Customer", "Transaction Date", "RefNumber", "PO Number",
               "To Be E-Mailed", "Other", "Other1", "Other2",
               "Unit of Measure", "Currency", "Exchange Rate",
               "Sales Tax Code"]
-# Set holding months for separating sheets by month
-monthSet = set()
 
 # List holding lists for storing data before transfering to each new sheet
 listofLists = []
 
 # Creates a new sheet with matching headers
-def CreateNewSheet(month):
+def CreateNewSheet(excelFile):
     wb = openpyxl.Workbook()
     ws = wb.active
-    ws.title = WorkSheetTitle + ' - ' + calendar.month_name[month]
+    ws.title = WorkSheetTitle + ' - ' + calendar.month_name[int(excelFile)]
     # Add headers to the first row from the headerList
     for col, val in enumerate(headerList, start=1):
         ws.cell(row=1, column=col).value = val
@@ -47,7 +45,6 @@ def CreateNewSheet(month):
     count = 2
     # Assign item to a cell and then fill cell with data from list
     for list in listofLists:
-        if ExtractMonth(list[1]) == month:
             customerData = ws.cell(row=count, column=1)
             transactionDateData = ws.cell(row=count, column=2)
             refNumberData = ws.cell(row=count, column=3)
@@ -72,11 +69,7 @@ def CreateNewSheet(month):
             
             count += 1
         
-    wb.save(WorkSheetTitle + ' - ' + calendar.month_name[month] + ".xlsx")
-
-# Extracts the month number from a date string
-def ExtractMonth(date):
-    return date.month
+    wb.save(ws.title + ".xlsx")
 
 # Get current directory
 currentDirectory = os.getcwd()
@@ -101,42 +94,38 @@ for i in range(0, len(excelFiles)):
         ColNames[col[0].value] = col[0].column_letter
         Current += 1
     
-    # Get month of rows and add them to monthSet
-    for col in workSheet[ColNames['940 Date/Time Stamp']]: # CHANGE THIS TO THE COLUMN WITH 940 Date/Time Stamp
-        if col.row > 1:
-            monthSet.add(ExtractMonth(col.value))
+    # Get First RefNumber
+    if i == 0:
+        RefNumber = str(workSheet[ColNames['Order Number'] + "2"].value)[:11]
 
     # Extract data from sheet and store for later
     for row in workSheet.iter_rows(min_row=2):
         tempList = []
         tempList.append(Customer) # Customer
+        
         for cell in row:
-            if cell.row > 1:
+            if cell.row == 2:
                 if cell.column_letter == ColNames['940 Date/Time Stamp']: # CHANGE TO COLUMN WITH 940 Date/Time Stamp
                     tempList.append(cell.value) # Transaction Date
                 if cell.column_letter == ColNames['Order Number']: # CHANGE TO COLUMN WITH Order Number
-                    tempList.append((str(cell.value))[:11]) # RefNumber, truncate to 11 characters
-                    tempList.append((str(cell.value))[:11]) # PO Number, truncate to 11 characters
+                    tempList.append(RefNumber) # RefNumber, truncate to 11 characters
+                    tempList.append(RefNumber) # PO Number, truncate to 11 characters
                 if cell.column_letter == ColNames['Delivery Date']: # CHANGE TO COLUMN WITH Delivery Date
                     tempList.insert(4, cell.value) # Ship Date
                     tempList.insert(5, cell.value) # Due Date
                     tempList.insert(6, Item) # Item
-                    tempList.insert(7, Quantity) # Quantity
+                    tempList.insert(7, (workSheet.max_row - 1)) # Quantity
                 if cell.column_letter == ColNames['Mono_Font and Text']: # CHANGE TO COLUMN WITH Mono_Font and Text
                     tempList.insert(8, os.path.splitext(excelFiles[i])[0]) # Name of excel file
                     tempList.insert(9, Price) # Price
-        listofLists.append(tempList)
+        if len(tempList) > 1:
+            listofLists.append(tempList)
     
     # Close the Excel file without saving
     workBook.close()
 
 # Create new sheets
-for month in monthSet:
-    CreateNewSheet(month)
-
+CreateNewSheet(str(excelFiles[0])[0:2])
 
 # Exit program
 sys.exit()
-
-
-
